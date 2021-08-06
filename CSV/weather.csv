@@ -1,0 +1,126 @@
+,season,race_name,weather
+0,2014,australian,dry
+1,2014,malaysian,dry
+2,2015,malaysian,33°c dry
+3,2015,chinese,dry 21°c
+4,2015,bahrain,dry 25°c
+5,2015,spanish,dry clear sky 30°c
+6,2015,monaco,dry clear sky 17°c
+7,2015,canadian,dry clouded 20°c
+8,2015,austrian,dry clouded 16°c
+9,2015,british,dry clouded 22°c
+10,2015,hungarian,dry clear 26°c
+11,2015,belgian,dry clear sky 23°c
+12,2015,italian,dry clear sky 22°c
+13,2015,singapore,dry clear sky 30°c
+14,2015,japanese,dry clouded 27°c
+15,2015,russian,dry partly clouded 17°c
+16,2015,us,dry clouded 17°c
+17,2015,mexican,wet clouded 26°c
+18,2015,brazilian,dry overcast 22°c
+19,2015,abu-dhabi,dry clear sky 25°c
+20,2016,australian,dry light clouds
+21,2016,bahrain,dry clear sky
+22,2016,chinese,dry sunny
+23,2016,russian,dry sunny
+24,2016,spanish,dry sunny
+25,2016,monaco,wet  overcast
+26,2016,canadian,13°c dry clouded
+27,2016,european,25°c dry sunny
+28,2016,austrian,18°c dry sunny
+29,2016,british,15°c wet dry overcast
+30,2016,hungarian,25°c dry sunny
+31,2016,belgian,25°c dry clear
+32,2016,italian,29°c dry clear
+33,2016,singapore,30°c dry sunny
+34,2016,malaysian,32°c dry sunny
+35,2016,japanese,19°c dry
+36,2016,mexican,19°c dry
+37,2016,brazilian,18°c clouds  rain
+38,2016,abu-dhabi,27°c dry  sunny
+39,2016,us,19°c dry
+40,2017,australian,sunny dry 23°c
+41,2017,chinese,12°c
+42,2017,bahrain,31°c dry
+43,2017,russian,sunny clear sky 26°c
+44,2017,spanish,sunny clear sky 24°c
+45,2017,monaco,sunny clear sky 26°c
+46,2017,canadian,sunny clear sky 29°c
+47,2017,azerbaijan,sunny clear sky 26°c
+48,2017,austrian,sunny clear sky 22°c
+49,2017,british,sunny clear sky 23°c
+50,2017,hungarian,sunny clear sky 27°c
+51,2017,belgian,23°c dry sunny
+52,2017,italian,25°c dry sunny
+53,2017,singapore,28°c wet  raining
+54,2017,malaysian,31°c dry  cloudy
+55,2017,japanese,26°c dry  sunny
+56,2017,brazilian,27°c clear sky  sunny
+57,2017,abu-dhabi,24°c dry  sunny
+58,2017,us,25°c dry  clear sky
+59,2017,mexican,21°c dry  sunny
+60,2018,australian,23.9°c dry  sunny
+61,2018,bahrain,dry   29.6°c
+62,2018,chinese,dry   18.9°c
+63,2018,azerbaijan,dry 17.1°c
+64,2018,spanish,dry 15.4°c
+65,2018,monaco,dry 25.9°c
+66,2018,canadian,dry 20°c
+67,2018,french,dry 25.2°c
+68,2018,austrian,dry   22.9°c
+69,2018,british,dry 26.7°c
+70,2018,german,dry wet 25.4°c
+71,2018,hungarian,sunny  34.2°c
+72,2018,belgian,dry  17.3°c
+73,2018,italian,dry  20.9°c
+74,2018,singapore,dry 29.7°c
+75,2018,russian,dry 23.4°c
+76,2018,japanese,dry 29.4°c
+77,2018,us,dry 20.9°c
+78,2018,mexican,dry 18.5°c
+79,2018,brazilian,dry 24°c
+80,2018,abu-dhabi,partly clouded  dry
+81,2019,australian,dry   23.6°c
+82,2019,bahrain,dry   26°c
+83,2019,chinese,dry   19.3°c
+84,2019,azerbaijan,dry   20.0°c
+85,2019,spanish,dry   19.75°c
+86,2019,monaco,dry   23.15°c
+87,2019,canadian,dry   29.7°c
+88,2019,french,dry   26.25°c
+89,2019,austrian,dry   34°c
+90,2019,british,dry   18.3°c
+91,2019,german,wet   21.2°c
+92,2019,hungarian,dry   26.8°c
+93,2019,belgian,dry   17.25°c
+94,2019,italian,dry   22.3°c
+95,2019,singapore,dry   30.3°c
+96,2019,russian,dry   22.35°c
+97,2019,japanese,dry   21.75°c
+98,2019,us,dry   21.3°c
+99,2019,brazilian,dry  20.4°c
+100,2019,abu-dhabi,dry  25.85°c
+101,2019,mexican,dry   22.3°c
+102,2020,austrian,dry   27.6°c
+103,2020,styrian,dry   20°c
+104,2020,hungarian,dry   21.6°c
+105,2020,british,dry  21°c
+106,2020,70th-anniversary,dry  24°c
+107,2020,spanish,dry  29.9°c
+108,2020,belgian,dry  19.3°c
+109,2020,italian,dry  27.8°c
+110,2020,tuscan,dry  30.3°c
+111,2020,russian,dry  30.1°c
+112,2020,eifel,dry  9.8°c
+113,2020,portuguese,dry   25.4°c
+114,2020,emilia-romagna,dry  18°c
+115,2020,turkish,13.1°c
+116,2020,bahrain,dry  25.5°c
+117,2020,sakhir,dry  21.3°c
+118,2020,abu-dhabi,dry  22.4°c
+119,2021,bahrain,dry  20.5°c
+120,2021,emilia-romagna,wet  9.45°c
+121,2021,portuguese,dry  19.5°c
+122,2021,spanish,dry  21.4°c
+123,2021,monaco,dry  21°c
+124,2021,azerbaijan,dry  24.5°c

@@ -40,7 +40,7 @@ ___
 
 The data was collected from Ergast API, which holds data harvested from the Formula 1 website. The API itself holds all information on races, results, drivers, qualifying, lap times, pit stops, constructors’ and drivers’ standings and circuits from Formula 1’s inception in 1950 to date.
 
-The scraping code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Data%20Collection.ipynb)
+The scraping code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/master/Formula%201%20-%20Data%20Collection.ipynb)
 
 The data acquired for each table was as below:
 
@@ -132,7 +132,7 @@ ___
 
 ___ -->
 
-The EDA & Visualisation code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Visualisation.ipynb)
+The EDA & Visualisation code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/master/Formula%201%20-%20Visualisation.ipynb)
 
 *`Click to expand the headers below containing plots.`*
 
@@ -244,7 +244,7 @@ ___
 ___
 ## 3. Modelling
 
-The modelling and evaluation code can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Modelling.ipynb)
+The modelling and evaluation code can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/master/Formula%201%20-%20Modelling.ipynb)
 
 ### A. Regression/Classification Problem 
 #### a. Justification

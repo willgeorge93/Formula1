@@ -43,27 +43,6 @@ The data was collected from Ergast API, which holds data harvested from the Form
 The scraping code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Data%20Collection.ipynb)
 
 The data acquired for each table was as below:
-
-<!-- I used BeautifulSoup and Requests Python libraries to scrape data from the TripAdvisor website. I decided to focus on London hotels only for the project to narrow down the scope of the project to one city given the time-consuming nature of the web-scraping process. When you search for London Hotels on the website you are given a list of sorted hotels each provides a link to the hotels main page with the hotel details/description and reviews at the bottom. Initially I scraped the links to all hotels in London (of which there were **1,923**) and selected details for each. Selected details for each hotel included:
-
-* Hotel name and address
-* Hotel description and "style"
-* Hotel star rating
-* Average review score
-* Total num. reviews and their breakdown by language
-* Extra details including range of room costs
-* Details of hotel and location amenities
-
-Of all the 1,923 hotels I discovered there were just over a million (1,072,222) reviews in total on the website. Each hotel page displayed only 5 reviews at a time and with the time given I realised I was not going to be able to scrape them all. I decided to focus initially on the "top chains" in London which Hilton, Marriot, Ibis, Premier Inn and TravelLodge and only on English language reviews (over 80% of all reviews were in English). For each hotel review I was able to scrape the following data:
-
-* Review headline
-* Main body of review
-* Date of stay of reviewer (MM/YYYY)
-* Score (1-5)
-
-I discovered after scraping only the "top chains" that I had relatively few reviews at the lower end of the spectrum (1 and 2 stars). I then decided to focus on scraping hotels where the average review was <= 3.0 in order to achieve a more balanced data set. After approx 2-3 weeks of solid scraping I managed to aquire a dataset of *283,624* reviews (just under 30% of the total).
-
-All details of the web-scraping process can be found in the following notebook: INSERT LINK -->
 ___
 ### A. Ergast API
 
@@ -95,18 +74,6 @@ ___
 | Constructor Name | Driver ID |
 | Position | Position |
 | Points | Points |
-
-
-<!-- >* **2020 Constructors' Standings**
-    * *Constructor*
-    * *Position*
-    * *Points*
-
-
->* **2020 Drivers' Standings**
-    * *Driver ID*
-    * *Position*
-    * *Points* -->
 ___
 ### B. Additional Scraping
 
@@ -128,9 +95,6 @@ ___
 ___
 ___
 ## 2. EDA
-<!-- ### Distributions
-
-___ -->
 
 The EDA & Visualisation code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Visualisation.ipynb)
 
@@ -223,12 +187,6 @@ Right at the bottom we have Caterham, dubbed one of the worst Formula 1 teams of
 </details>
 
 ___
-
-<!-- ### How Important a Factor is Driver Consistency?
-New graph?
-___ -->
-
-
 ### D. Circuits
 ___
 
@@ -325,8 +283,6 @@ Points and Finish Position variables were included in the train-test split, and 
 The defined `Target Variable` for the train-test split was aforementioned **Filled Splits** variable.
 ___
 ### E. Column Transform & Pipeline
-
-<!-- applied a Count Vectorizer using stopwords from the NLTK library along with selected additional words which I added through experimentation. Given the sheer size of the sparse matrix produced by this and with a mind on processing/modelling time I decided to limit the "max_features" parameter to 10,000 although I did do some experimentation with "ngram_range" and and "max_features" as can be seen in the notebook.-->
 
 For transforming the data into a model-ready format, I used Sci-Kit Learn ColumnTransformers and Pipelines.
 ___
@@ -459,7 +415,6 @@ As can be seen from the table above, with each increase in margin of error for p
 Using the results table with the now assigned points scored, I used the inbuilt pandas `.groupby()` method to separately groupby constructor and driver for the respective championships and aggregate by summing up the points for each of the groups to produce two separate Predicted Standings tables, as shown below.
 ___
 ### A. Driver Championship
-<!-- ![driver-standing](images/driver_standing.png) -->
 
 <br>
 
@@ -502,8 +457,6 @@ The cumulative total of the Positions Error is 3.
 
 ![driver-standing-plot](images/driver_standing_true_v_pred.png)
 
-<!-- ![driver-standing-scores](images/driver_standing_scores.png) -->
-
 <br>
 
 *All metrics are calculated on the `Predicted/True Points`:*
@@ -520,7 +473,6 @@ The cumulative total of the Positions Error is 3.
 
 ___
 ### B. Constructor Championship
-<!-- ![constructor-standing](images/constructor_standing.png) -->
 
 <br>
 
@@ -549,13 +501,11 @@ Interestingly, McLaren only achieved third place in the championship in the last
 
 McLaren also achieved this off the back of a very poor run in the hybrid era (as discussed previously), where they had more than one 8th place finishes in the recently preceding years.
 
-As we can see from the above table, the only team out of position of those above is the McLaren team, forcing the Renault and Racing Point teams to slide down a position each.
+As we can see from the above table, the only team out of position of those above is the McLaren team, forcing Racing Point to slide down to 4th place.
 
 <br>
 
 ![constructor-standing-plot](images/constructor_standing_true_v_pred.png)
-
-<!-- ![constructor-standing-scores](images/constructor_standing_scores.png) -->
 
 <br>
 

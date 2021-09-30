@@ -40,7 +40,7 @@ ___
 
 The data was collected from Ergast API, which holds data harvested from the Formula 1 website. The API itself holds all information on races, results, drivers, qualifying, lap times, pit stops, constructors’ and drivers’ standings and circuits from Formula 1’s inception in 1950 to date.
 
-The scraping code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/master/Formula%201%20-%20Data%20Collection.ipynb)
+The scraping code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Data%20Collection.ipynb)
 
 The data acquired for each table was as below:
 
@@ -132,7 +132,7 @@ ___
 
 ___ -->
 
-The EDA & Visualisation code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/master/Formula%201%20-%20Visualisation.ipynb)
+The EDA & Visualisation code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Visualisation.ipynb)
 
 *`Click to expand the headers below containing plots.`*
 
@@ -244,7 +244,7 @@ ___
 ___
 ## 3. Modelling
 
-The modelling and evaluation code can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/master/Formula%201%20-%20Modelling.ipynb)
+The modelling and evaluation code can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Modelling.ipynb)
 
 ### A. Regression/Classification Problem 
 #### a. Justification
@@ -328,7 +328,7 @@ ___
 
 <!-- applied a Count Vectorizer using stopwords from the NLTK library along with selected additional words which I added through experimentation. Given the sheer size of the sparse matrix produced by this and with a mind on processing/modelling time I decided to limit the "max_features" parameter to 10,000 although I did do some experimentation with "ngram_range" and and "max_features" as can be seen in the notebook.-->
 
-For transforming the data into a model-ready format, I used Sci-Kit Learn ColumnTransformers and Piplines.
+For transforming the data into a model-ready format, I used Sci-Kit Learn ColumnTransformers and Pipelines.
 ___
 #### a. Column Transformers
 The three types of transformation I employed for the final dataset were:
@@ -375,11 +375,6 @@ The following models were those that were tested using CV:
 
 Lasso, highlighted in bold, was the best performing of these standalone models.
 
-<!-- achieving a score of -0.5 for R<sup>2</sup> Score on the Test Set. Comparatively, R<sup>2</sup> Score for the Test Set for Linear Regression was -19.
- -->
-___
-
-
 The following Ensemble Methods were then evaluated using the RandomizedSearchCV:
 
 * Neural Network (Multi-Layered Perceptron Regressor)
@@ -390,14 +385,13 @@ The following Ensemble Methods were then evaluated using the RandomizedSearchCV:
 * Bagging Regressor with Lasso estimator
 
 Here, the clear winner was the Random Forest Regressor.
-<!-- , achieving a score of 0.93 on the Training Set and -0.15 on the Test Set for R<sup>2</sup> Score -->
 
 *The reasoning for the use of GridSearchCV for standalone models and then RandomizedSearchCV for ensemble methods was the time taken for each model to load. Given that I could very quickly change the parameters with the standalone models, the Grid Search suited well, but I was hoping for less specified parameters to be tested for the models that would take in excess of 12 hours to run and return best params.*
 
 Many tuning steps were taken during project assembly, with many different variations of parameters sampled. Eventually, I came to the conclusion that the best model was to be a somewhat basic RandomForestRegressor, with all default settings except for:
 
-* `ccp_alpha` = 0.5
-* `n_estimators` = 10,000
+* `ccp_alpha` = 0.04
+* `n_estimators` = 1,000
 * `criterion` = MSE
 
 The reasoning for this relatively simplistic model is two-fold:
@@ -410,10 +404,10 @@ The reasoning for this relatively simplistic model is two-fold:
 The reality is that the model's base parameters perform very strongly.
 ___
 ### G. Results
-The initial R<sup>2</sup> results of the RandomForest Model with 'ccp_alpha' set to 0.5 were:
+The initial R<sup>2</sup> results of the RandomForest Model with 'ccp_alpha' set to 0.04 were:
 
-* `Training Set` : 0.93
-* `Test Set` : -0.15
+* `Training Set` : 0.92
+* `Test Set` : -0.22
 
 Comparatively, this was the best of all of the models I tried.
 ___
@@ -443,7 +437,7 @@ Since the model’s output is now in the form of distinct positions, I wrote a f
 
 <br>
 
-Upon initial inspection of the R<sup>2</sup> Score between positions, the score was very low, with only 13.5% of the true positions matching those that were predicted.
+Upon initial inspection of the R<sup>2</sup> Score between positions, the score was very low, with only 18.24% of the true positions matching those that were predicted.
 
 However, since the model's performance was not to be evaluated on predictive power with regard to individual finish positions, I decided to look into varying margins of error to see what percentage of predictions are within a particular range of their target, since upon aggregation these errors may cumulatively cancel to provide greater predictive accuracy that anticipated via the R<sup>2</sup> Score.
 
@@ -453,10 +447,10 @@ The following percentages relate to the permissible margins of error listed, up 
 
 | +/- Positions | Percentage Match |
 | :--- | ---: |
-| 0 | 17.1% |
-| 1 | 38.8% |
-| 2 | 51.2% |
-| 3 | 59.4% |
+| 0 | 18.24% |
+| 1 | 41.18% |
+| 2 | 52.35% |
+| 3 | 61.18% |
 
 <br>
 
@@ -472,35 +466,35 @@ ___
 | Driver | Pred Points | True Points | Pred Pos | True Pos | Pos Error (Diff: Pred - True) |
 | :--- | --- | --- | --- | --- | --- |
 | Lewis Hamilton | 320 | 347 | 1 | 1 | 0 |
-| Valtteri Bottas | 305 | 223 | 2 | 2 | 0 |
+| Valtteri Bottas | 308 | 223 | 2 | 2 | 0 |
 | Max Verstappen | 229 | 214 | 3 | 3 | 0 |
-| Sergio Pérez | 118 | 125 | 4 | 4 | 0 |
-| Daniel Ricciardo | 113 | 119 | 4 | 5 | -1 |
-| Alex Albon | 99 | 105 | 6 | 6 | 0 |
-| Lance Stroll | 98 | 75 | 7 | 10 | -3 |
-| Carlos Sainz | 92 | 105 | 8 | 6 | 2 |
+| Daniel Ricciardo | 111 | 119 | 4 | 5 | -1 |
+| Carlos Sainz | 105 | 105 | 5 | 6 | -1 |
+| Sergio Pérez | 102 | 125 | 6 | 4 | 2 |
+| Lance Stroll | 99 | 75 | 7 | 10 | -3 |
+| Alex Albon | 96 | 105 | 8 | 6 | 2 |
 | Charles LeClerc | 73 | 98 | 9 | 8 | 1 |
-| Lando Norris | 56 | 97 | 10 | 9 | 1 |
-| Pierre Gasly | 55 | 75 | 11 | 10 | 1 |
-| Esteban Ocon | 42 | 62 | 12 | 12 | 0 |
-| Sebastian Vettel | 38 | 33 | 13 | 13 | 0 |
-| Kimi Räikkönen | 24 | 4 | 14 | 16 | -2 |
-| Nico Hülkenberg | 17 | 10 | 15 | 15 | 0 |
-| Daniil Kvyat | 16 | 32 | 16 | 14 | 2 |
-| Kevin Magnussen | 10 | 1 | 17 | 20 | -3 |
-| Nicholas Latifi | 6 | 0 | 18 | 21 | -3 |
-| George Russell | 4 | 3 | 19 | 18 | 1 |
-| Antonio Giovinazzi | 2 | 4 | 20 | 16 | 4 |
-| Romain Grosjean | 2 | 2 | 20 | 19 | 1 |
+| Pierre Gasly | 56 | 75 | 10 | 10 | 0 |
+| Lando Norris | 54 | 97 | 11 | 9 | 2 |
+| Esteban Ocon | 35 | 62 | 12 | 12 | 0 |
+| Sebastian Vettel | 34 | 33 | 13 | 13 | 0 |
+| Kimi Räikkönen | 20 | 4 | 14 | 16 | -2 |
+| Daniil Kvyat | 20 | 32 | 14 | 14 | 0 |
+| Nico Hülkenberg | 17 | 10 | 16 | 15 | 1 |
+| Kevin Magnussen | 15 | 1 | 17 | 20 | -3 |
+| Romain Grosjean | 7 | 2 | 18 | 19 | -1 |
+| Antonio Giovinazzi | 6 | 4 | 19 | 16 | 3 |
+| Nicholas Latifi | 6 | 0 | 19 | 21 | -2 |
+| George Russell | 4 | 3 | 21 | 18 | 3 |
 | Pietro Fittipaldi | 0 | 0 | 22 | 21 | 1 |
 | Jack Aitken | 0 | 0 | 22 | 21 | 1 |
 | **Total** | **-** | **-** | **-** | **-** | **3** |
 
 <br>
 
-As can be seen above, some of the positions were predicted exactly, such as Lewis Hamilton, Valtteri Bottas, Max Verstappen, Esteban Ocon and Alex Albon. Those at the very top, Lewis Hamilton, Valtteri Bottas and Max Verstappen are arguably quite easy predictions to make. Although there is a lot of unpredictability in the sport, these are a combination of the most skilled drivers on the grid and the top two constructors on the grid. It was also evident from the model's coefficients that the Mercedes team was the strongest factor in finishing in a top position, and so it was very unlikely that there was going to be any competitor for these top two positions in the Drivers' Standings.
+As can be seen above, some of the positions were predicted exactly, such as Lewis Hamilton, Valtteri Bottas, Max Verstappen, Pierre Gasly, Esteban Ocon, Sebastian Vetter and Daniil Kvyat. Those at the very top, Lewis Hamilton, Valtteri Bottas and Max Verstappen are arguably quite easy predictions to make. Although there is a lot of unpredictability in the sport, these are a combination of the most skilled drivers on the grid and the top two constructors on the grid. It was also evident from the model's coefficients that the Mercedes team was the strongest factor in finishing in a top position, and so it was very unlikely that there was going to be any competitor for these top two positions in the Drivers' Standings.
 
-Aside from these, many of the drivers are in roughly the correct positions, with error of 4 as maximum, but all others within a margin of error of 3.
+Aside from these, many of the drivers are in roughly the correct positions, with error of 3 as maximum.
 
 The cumulative total of the Positions Error is 3.
 
@@ -516,11 +510,11 @@ The cumulative total of the Positions Error is 3.
 
 | Metric | Score |
 | --- | --- |
-| Spearman Rank Correlation | 0.9641 |
-| Pearson Correlation | 0.9653 |
-| R2 Score | 0.9247 |
-| Mean Squared Error | 567.43 |
-| Root Mean Squared Error | 23.821 |
+| Spearman Rank Correlation | 0.9668 |
+| Pearson Correlation | 0.9632 |
+| R2 Score | 0.9210 |
+| Mean Squared Error | 595.87 |
+| Root Mean Squared Error | 24.410 |
 
 <br>
 
@@ -533,14 +527,14 @@ ___
 | Constructor | Pred Points | True Points | Pred Pos | True Pos |
 | :--- | --- | --- | --- | --- |
 | Mercedes | 628 | 573 | 1 | 1 |
-| Red Bull | 328 | 319 | 2 | 2 |
-| Racing Point | 228 | 195 | 3 | 4 |
-| Renault | 155 | 181 | 4 | 5 |
-| McLaren | 148 | 202 | 5 | 3 |
-| Ferrari | 111 | 131 | 6 | 6 |
-| Alphatauri | 71 | 107 | 7 | 7 |
+| Red Bull | 325 | 319 | 2 | 2 |
+| Racing Point | 218 | 195 | 3 | 4 |
+| McLaren | 146 | 202 | 4 | 3 |
+| Renault | 159 | 181 | 5 | 5 |
+| Ferrari | 107 | 131 | 6 | 6 |
+| Alphatauri | 76 | 107 | 7 | 7 |
 | Alfa Romeo | 26 | 8 | 8 | 8 |
-| Haas | 12 | 3 | 9 | 9 |
+| Haas | 22 | 3 | 9 | 9 |
 | Williams | 10 | 0 | 10 | 10 |
 
 <br>
@@ -549,7 +543,7 @@ For the Constructors' Standings predictions, I expected slightly better results 
 
 Again, Mercedes convincingly at the top of the table as per the model's coefficients, with perhaps heightened bias due to previous years' results. Following this, Red Bull and some likely suspects lower in the table in Williams' who have been uncharacteristically low performers in the hybrid era, and Haas, who have had a less than exemplary run in Formula 1 since entering the sport in 2014.
 
-To analyse the results for the Constructors' Standings, we can see that all Constructors have been correctly predicted bar those in the 3rd - 5th place positions, giving 70% correct positional prediction.
+To analyse the results for the Constructors' Standings, we can see that all Constructors have been correctly predicted bar those in the 3rd & 4th place positions, giving 80% correct positional prediction.
 
 Interestingly, McLaren only achieved third place in the championship in the last race of the season due to a poor race and retirement of a driver from the Racing Point team, who seemed destined for third place.
 
@@ -569,11 +563,11 @@ As we can see from the above table, the only team out of position of those above
 
 | Metric | Score |
 | --- | --- |
-| Spearman Rank Correlation | 0.9636 |
-| Pearson Correlation | 0.9866 |
+| Spearman Rank Correlation | 0.9879 |
+| Pearson Correlation | 0.9874 |
 | R2 Score | 0.9637 |
-| Mean Squared Error | 998.80 |
-| Root Mean Squared Error | 31.604 |
+| Mean Squared Error | 898.60 |
+| Root Mean Squared Error | 29.977 |
 
 <br>
 

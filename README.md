@@ -546,6 +546,7 @@ Moving forwards, there are a few things in particular I’d like to focus on to 
     * Test use of different stopwords over the more granular data.
 * Expand the training data to incorporate previous years examine how this would affect predictions.
 * Further expand the range of models tested and tuned, e.g. XGBoost.
+**    * NOTE: XGBOOST MODEL HAS BEEN TESTED AND A NEW NOTEBOOK CONTAINING THE TUNING PROCESS INCLUDED.**
 * Test more finite variations in model parameters to incrementally improve scores further.
 * Employ cloud computing to offload some of the computation time to optimise model performance.
 * Look at creating a web app to predict for different seasons using the current data.

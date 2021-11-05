@@ -1,578 +1,547 @@
-{
- "cells": [
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "# Formula 1 Race Points Predictor\n",
-    "___\n",
-    "___\n",
-    "### Question: “Can we predict the 2020 Formula 1 Championship, training on pre-2020 data?”\n",
-    "___\n",
-    "___\n",
-    "## Goals of the project (Table of Contents)\n",
-    "\n",
-    "The goal of the project was as follows:\n",
-    "\n",
-    "1. [Collecting the Data](#1.-Collecting-the-Data)\n",
-    "    1. [Ergast API](#A.-Ergast-API)\n",
-    "    2. [Additional Scraping](#B.-Additional-Scraping)\n",
-    "2. [EDA](#2.-EDA)\n",
-    "    1. [Correlation](#A.-Correlation)\n",
-    "    2. [Age](#B.-Age)\n",
-    "    3. [Mistakes](#C.-Mistakes)\n",
-    "    4. [Circuits](#D.-Circuits)\n",
-    "3. [Modelling](#3.-Modelling)\n",
-    "    1. [Regression/Classification Problem](#A.-Regression/Classification-Problem)\n",
-    "        1. [Justification](#a.-Justification)\n",
-    "        2. [Methodology](#b.-Methodology)\n",
-    "    2. [Success Metrics](#B.-Success-Metrics)\n",
-    "    3. [Feature Engineering](#C.-Feature-Engineering)\n",
-    "    4. [Final Features & Train-Test Split](#D.-Final-Features-&-Train-Test-Split)\n",
-    "    5. [Column Transform & Pipeline](#E.-Column-Transform-&-Pipeline)\n",
-    "        1. [Column Transformers](#a.-Column-Transformers)\n",
-    "        2. [Pipelines](#b.-Pipelines)\n",
-    "    6. [Choosing the Correct Model](#F.-Choosing-the-Correct-Model)\n",
-    "    7. [Results](#G.-Results)\n",
-    "4. [Converting Results back to Classification Form](#4.-Converting-Results-back-to-Classification-Form)\n",
-    "5. [Measuring Success of the Model](#5.-Measuring-Success-of-the-Model)\n",
-    "    1. [Driver Championship](#A.-Driver-Championship)\n",
-    "    2. [Constructor Championship](#B.-Constructor-Championship)\n",
-    "6. [Conclusion & Lessons Learned](#6.-Conclusion-&-Lessons-Learned)\n",
-    "7. [Future Recommendations](#7.-Future-Recommendations) - *what next?*\n",
-    "___\n",
-    "___\n",
-    "## 1. Collecting the Data\n",
-    "\n",
-    "The data was collected from Ergast API, which holds data harvested from the Formula 1 website. The API itself holds all information on races, results, drivers, qualifying, lap times, pit stops, constructors’ and drivers’ standings and circuits from Formula 1’s inception in 1950 to date.\n",
-    "\n",
-    "The scraping code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Data%20Collection.ipynb)\n",
-    "\n",
-    "The data acquired for each table was as below:\n",
-    "___\n",
-    "### A. Ergast API\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "**`PREDICTOR DATA:`**\n",
-    "\n",
-    "| Races | Circuits | Drivers | Results | Qualifying |\n",
-    "| :--- | :--- | :--- | :--- | :--- |\n",
-    "| Season | Circuit ID | Driver ID | Season | Season |\n",
-    "| Round | Circuit Name | Name | Round | Round |\n",
-    "| Race Name | Latitude | Nationality | Circuit ID | Circuit ID |\n",
-    "| Circuit ID | Longitude | Driver Code | Driver ID | Driver ID |\n",
-    "| Latitude | Locality | Date of Birth | Finish Position | Qualifying Position |\n",
-    "| Longitude | Country | | Date of Birth | Constructor |\n",
-    "| Country | Wikipedia URL | | Nationality | Q1 |\n",
-    "| Date | | | Constructor | Q2 |\n",
-    "| Wikipedia URL | | | Grid | Q3 |\n",
-    "| | | | Time |\n",
-    "| | | | Status |\n",
-    "| | | | Points |\n",
-    "\n",
-    "<br><br>\n",
-    "\n",
-    "**`OUTCOME COMPARISON DATA:`**\n",
-    "\n",
-    "| 2020 Constructor Standings | 2020 Driver Standings |\n",
-    "| --- | --- |\n",
-    "| Constructor Name | Driver ID |\n",
-    "| Position | Position |\n",
-    "| Points | Points |\n",
-    "___\n",
-    "### B. Additional Scraping\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "**`Races:`**\n",
-    "* Added to Races DataFrame using Wikipedia URLs & BeautifulSoup:\n",
-    "    * *Weather Data*\n",
-    "    * *Overall Race Distance that year*\n",
-    "* Added additional Weather Data to Races via F1-Fansite.com using manipulated Race Name variable, Selenium undetected chromedriver & BeautifulSoup.\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "**`Circuits:`**\n",
-    "* Type of Circuit (Street or Road)\n",
-    "* Clockwise Direction\n",
-    "* Lap Length\n",
-    "\n",
-    "___\n",
-    "___\n",
-    "## 2. EDA\n",
-    "\n",
-    "The EDA & Visualisation code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Visualisation.ipynb)\n",
-    "\n",
-    "*`Click to expand the headers below containing plots.`*\n",
-    "\n",
-    "### A. Correlation\n",
-    "\n",
-    "___\n",
-    "<details>\n",
-    "    \n",
-    "<summary> How Correlated are the dependent variables? </summary>\n",
-    "\n",
-    "![correlations](images/correlations.png)\n",
-    "\n",
-    "As can be seen above, there is little correlation amongst the variables bar those which are closely related in some way, for example the **Q_best**, **Q_mean** & **Q_worst** qualifying times and the **Qualifying**, **Grid** and **Finish positions**. Curiously, of **Qualifying Position** and **Grid Position**, it is **Qualifying Position** that is more closely related to the **Finish Position**. The difference here is that **Grid Position** is essentially the same as **Qualifying Positions** in most cases, bar those where certain drivers have received a grid-place penalty or are unable to start the race for any reason, whereby they will drop down the grid and other drivers will move up.\n",
-    "This hints at some reliability and predictability with drivers and machinery, showing that those drivers who are strong qualifiers will likely be able to claim back a position that better resembles their speed in comparison with other drivers.\n",
-    "Another interesting non-correlation is that of the **Q_best**, **Q_mean** & **Q_worst** and the **Qualifying Position**. Of course, this is likely down to the fact that each track is a different length and can maintain a different average speed throughout the lap. Therefore, across the full dataset of all tracks and all lap times, it is reasonable to say that there is little correlation, although circuit by circuit there would definitely be a high correlation between these variables (although it would be very unlikely these would be 100% correlated.)\n",
-    "</details>\n",
-    "\n",
-    "___\n",
-    "### B. Age\n",
-    "\n",
-    "Age is a defining factor for many decisions made by teams. Younger drivers can be sharp and skillful, but also reckless and emotional. There comes a time where the benefits of youth and experience reach an equilibrium - the drivers’ youthful reactions are met by reliability and maturity. Here, drivers are at their most likely to win races, and are also most likely to appear attractive prospects to teams that are looking for their next big investment in a driver. If one of the top-tier teams was looking for their next driver to help contend for a world championship, one with plenty of years ahead, youthful skills but also the composure to guarantee consistency would be the ideal candidate.\n",
-    "___\n",
-    "<details>\n",
-    "\n",
-    "<summary> i. What is the Volume of Point Scorers by Age since 2014 </summary>\n",
-    "\n",
-    "![age_point_freq](Tableau_Charts/age_point_frequency.png)\n",
-    "\n",
-    "The diagram above shows the peak to be at the age of 25, with a strong right skew and several stages to the decline.\n",
-    "\n",
-    "The reasoning for such a strong right skew is two-fold. Firstly, we have decisions made by constructors. Most years you can expect to see at least one or two of the new wave of up-and-coming drivers from Formula 2 come onto the scene in Formula 1. These drivers are always young and replacing someone who has not been performing and/or making a difference for their team. Because of this, the turnover of young drivers is very high and there is a sort of cut-off age past which only the drivers that have proven to have the necessary mettle and an element of luck are able to remain in the sport. It is for this reason that there are so many drivers of a young age competing in the sport, and of those who are able to cement their position in the sport there is then the everlasting pressure of the tradeoff between performance for their team and the viability of investing in the driver for the future of their team. Therefore as time moves on, the older drivers will eventually be dropped from the best teams to lower-tier teams where their experience will still provide some benefit, and then altogether from Formula 1, unless those drivers are particularly rare drivers that are able to continue to score points well into their late 30s and early 40s (e.g. Kimi Räikkönen, Fernando Alonso etc.)\n",
-    "\n",
-    "</details>\n",
-    "\n",
-    "___\n",
-    "<details>\n",
-    "\n",
-    "<summary> ii. Average number of Point-Scoring Positions achieved by Age </summary>\n",
-    "\n",
-    "![age_point_ave](Tableau_Charts/age_point_average.png)\n",
-    "\n",
-    "In the diagram above, we see the opposite side of the coin. The diagram shows the average number of point scoring positions by age of a driver. We know that there is a high volume of young drivers which begins to decline at the age of 27, and with so many unsuccessful drivers being eliminated from teams prior to this age it is understandable that the average number of positions in the points for these ages will be substantially lower. Once we reach the ages of 27+, the average climbs rapidly, since the volume of drivers that make it in Formula 1 through this stage have established themselves in a good team due to strong performance and consistency. From around the 33-year-old mark things are unsurprisingly beginning to fall away as teams would begin to younger drivers as they look towards the future of the teams and drivers are beginning to lose their edge. There are, however, some exceptions - for example the sky-high average point-scoring finishes for 38-year-old drivers was achieved completely in one year by Kimi Räikkönen, who had such a huge effect due to a season of incredible performance and so few other 38-year-old drivers.\n",
-    "    \n",
-    "</details>\n",
-    "\n",
-    "___\n",
-    "### C. Mistakes\n",
-    "What makes Formula 1 so unpredictable is the inability to predict a drivers’ or constructors’ race-ending event. For example, an illness, a crash, an engine fault, a brake fault or simply a problem in the pit lane that means a car goes into the pits leading the race convincingly, and then never leaves the pits due to a problem with pit machinery forcing the car to retire. This happens very often in Formula 1, with at least one DNF to be expected every race and sometimes up to 7 or more in one race!\n",
-    "\n",
-    "It is important to look at driver and constructor consistency to understand why things might have unfolded as they have in the respective championships.\n",
-    "___\n",
-    "<details>\n",
-    "\n",
-    "<summary> i. Average Number of Mistakes by Drivers with 20+ Races </summary>\n",
-    "\n",
-    "![driver_mistakes](Tableau_Charts/driver_issues_20plus_races_avg_mistakes.png)\n",
-    "\n",
-    "Unsurprisingly, at the very top we can see 7-time world champion Lewis Hamilton, well renowned for his risk-conscious driving style, minimising the potential for any endangerment of his position or potential win. This, combined with his overall control of the car, enabled him to ensure he didn’t lose a race in the wet, which is classically characterised as unpredictable personified, for 5 years.\n",
-    "\n",
-    "Looking further below Lewis Hamilton, we see multiple other world champions and title contenders, including Nico Rosberg, Valtteri Bottas, Sebastian Vettel, Daniel Ricciardo and Kimi Räikkönen.\n",
-    "\n",
-    "At the bottom we can see many of the names now committed to Formula 1 history, including Pastor Maldonado, Esteban Gutierrez, Pascal Wehrlein, Jolyon Palmer and Marcus Ericsson.\n",
-    "\n",
-    "Interestingly, there are some names here that are displaced according to this rule. Max Verstappen, the star driver of the Red Bull Racing team and 3rd place finisher after the two dominant Mercedes drivers for the past 2 seasons, shows a comparatively high number of mistakes sitting about ⅔ down in the table. This can be explained by his junior years in F1 from 2015 onwards, where he raced for Renault and then moved to Red Bull in 2016. As discussed previously, it is expected for drivers to make more mistakes during the early days of their career whilst they learn to control temper, manage pressure and become more vigilant in scenarios that could potentially pose damage to their car.\n",
-    "\n",
-    "The other, Jenson Button, is highly intriguing since during the time reviewed he will have been in the latter days of his F1 career, following his world championship title in 2009.\n",
-    "Combining deeper investigation with prior knowledge on the progression of Jenson Button’s road to retirement, I would surmise that due to repeated years of uncompetitive machinery and misfortune following 2009 and his decline in motivation to compete in Formula 1 led to more personal mistakes when behind the wheel.\n",
-    "\n",
-    "</details>\n",
-    "\n",
-    "___\n",
-    "<details>\n",
-    "\n",
-    "<summary> ii. Average Number of Mistakes by Constructors since 2014 </summary>\n",
-    "\n",
-    "![constructor_mistakes](Tableau_Charts/constructor_issues_faults.png)\n",
-    "\n",
-    "Looking at Constructors’  mistakes, we see the two most successful F1 teams of all time right at the top with the lowest percentage of mistakes vs. races entered. The combined consistency of Mercedes and their drivers Lewis Hamilton, Nico Rosberg and Valtteri Bottas is apparent, and it comes as no surprise that the top 2 spots in the Drivers’ Championships over 5 of the last 7 seasons (2014 - 2020) have been occupied by whichever of these three drivers have been racing Mercedes’ equipment.\n",
-    "\n",
-    "Red Bull and Alpha Tauri positioned next to each other, understandably since they are essentially Red Bull’s 1st and 2nd team and therefore use much of the same starting kit inside the cars meaning base reliability should be very similar between these two before separate development begins.\n",
-    "\n",
-    "McLaren had many issues in the years following the 2014 season, with 9th place finishes in 2015 and 2017 before incrementally returning to form reminiscent of their former glory, culminating in a third place finish in 2020.\n",
-    "\n",
-    "Renault, after taking control of the Lotus F1 team in 2016, had some poor performance in the early days of their hybrid era appearances with a 9th place finish in 2016 while getting their cars and team up-to-speed. Lotus, having performed well between 2012 and 2013, lost both their CEO and their Team Principal (who joined McLaren instead) in 2014, gaining a new Team Principal with no prior Formula 1 experience. Finishing 8th overall in the standings in 2014 and facing problem after problem for both drivers in 2015, Renault had a lot of work to do to recover some of the team’s performance from 2016, and have been improving since.\n",
-    "\n",
-    "Right at the bottom we have Caterham, dubbed one of the worst Formula 1 teams of all time, plagued by failure throughout its 2012-2014 lifespan before closing down permanently at the end of 2014 having never scored a point.\n",
-    "\n",
-    "</details>\n",
-    "\n",
-    "___\n",
-    "### D. Circuits\n",
-    "___\n",
-    "\n",
-    "<details>\n",
-    "\n",
-    "<summary> Circuits Used since 2014 & Magnitude </summary>\n",
-    "\n",
-    "![race-venues](Tableau_Charts/race_venue_distribution.png)\n",
-    "\n",
-    "</details>\n",
-    "\n",
-    "___\n",
-    "___\n",
-    "## 3. Modelling\n",
-    "\n",
-    "The modelling and evaluation code can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Modelling.ipynb)\n",
-    "\n",
-    "### A. Regression/Classification Problem \n",
-    "#### a. Justification\n",
-    "At this stage, I noticed that if I were to choose a Classification Model, there would be danger of multiple of the same class (position) predicted for a particular race, and perhaps some missing positions. Since classification models can’t be trained to select one of each class, I decided to move forward with a Regression Model.\n",
-    "___\n",
-    "#### b. Methodology\n",
-    "Since one win does not necessarily equate to another, e.g. if a driver wins by a margin of 30 seconds to second place, and another wins by a margin of 1 second to the second place driver, these wins should have some weighting to represent the level of dominance of that driver when performing well.\n",
-    "\n",
-    "Therefore, instead of using the ‘Finish Position’ variable, I manufactured a ‘Split Time’ variable by taking the ‘Race Time’ of the first-place finisher for each race and determined the difference of each driver’s Race Time to the first-place finisher. It should be noted that only those who aren’t lapped during the race actually finish the race. As soon as the first-place driver crosses the line, the next time each of the remaining drivers crosses the line it will complete their race, so for a race that is 57 laps long, 56 laps will be completed by those who are lapped once, and 55 for those who are lapped twice.\n",
-    "For this reason, the time of the last driver not to be lapped was carried forward to all other drivers and then the time multiplied by the number of laps lapped by. The majority of the time, at least the first 8-9 drivers will cross the line without being lapped, and since only the top ten finishers score points in a Formula 1 race, the impact of the homogenised target variable should be of minimal consequence.\n",
-    "___\n",
-    "### B. Success Metrics\n",
-    "Despite the use of a regression model, I have decided to use metrics pertaining to a classification model since the results will be converted back into integer positions for evaluation.\n",
-    "\n",
-    "This in mind, the success metrics I have chosen are Spearman Rank & Pearson Correlations and R2 Score on predicted and true positions and the MSE and RMSE on the predicted and true points.\n",
-    "___\n",
-    "### C. Feature Engineering\n",
-    "In addition to those features acquired during the Data Collection phase, I created some of my own. After identifying which of the different features I would be able to use to train and/or test the model, I looked to those features I might not be able to make use of for one reason or another. I decided that the following was true:\n",
-    "\n",
-    "* Date of Birth of Drivers alone would not be relevant to any form of success.\n",
-    "* Date of the Race would not have any influence on Driver/Constructor performance.\n",
-    "* Since 2nd and 3rd Rounds of Qualifying don’t involve all drivers, the info can’t be used as is.\n",
-    "___\n",
-    "**1. Date of Birth & Race Date**\n",
-    "\n",
-    "In order to create a better variable from the Date of Birth and Race Date features, I decided to use datetime to convert the dates into a format with which I could find the length of time between the two dates (in days). For each entry in the data, there was then an entry for the age of each of the drivers at the time of the race.\n",
-    "\n",
-    "**2. Qualifying Rounds**\n",
-    "\n",
-    "Not all drivers compete in all rounds of qualifying. The qualifying structure is:\n",
-    "\n",
-    "* `Q1` : all 20 drivers take part, posting the best time they can for the session. Those in the 16th - 20th places are then set in position.\n",
-    "    \n",
-    "* `Q2` : the top 15 take part, once again posting their fastest lap time. The 11th - 15th fastest are then set in position.\n",
-    "    \n",
-    "* `Q3` : the remaining drivers set out one final time to post the best time they can and all positions are then decided at the end of Q3.\n",
-    "\n",
-    "If the qualifying data was used as originally held, around half of the instances in the data would contain null values in certain qualifying sessions. In order to ensure all qualifying data could be used, I created Q_mean, Q_worst and Q_best variables:\n",
-    "\n",
-    "* `Q_mean` : the average time across the best times for each qualifying round involved in.\n",
-    "\n",
-    "* `Q_best` : the best time across the best times for each qualifying round involved in.\n",
-    "    \n",
-    "* `Q_worst` : the worst time across the best times for each qualifying round involved in.\n",
-    "___\n",
-    "### D. Final Features & Train-Test Split\n",
-    "The data carried forwards to the model is as follows:\n",
-    "* Season\n",
-    "* Round\n",
-    "* Race Name\n",
-    "* Driver Name\n",
-    "* Constructor\n",
-    "* Grid Position\n",
-    "* Qualifying Position\n",
-    "* Q_best\n",
-    "* Q_worst\n",
-    "* Q_mean\n",
-    "* Age During Race\n",
-    "* Locality\n",
-    "* Country\n",
-    "* Type of Circuit (Street or Road)\n",
-    "* Clockwise Direction\n",
-    "* Lap Length\n",
-    "* Weather\n",
-    "* Finish Position\n",
-    "* Points\n",
-    "* Filled Splits\n",
-    "\n",
-    "\n",
-    "Given that the aim of the model is to predict the Constructors’ and Drivers’ Standings, the Training Set was defined as data from the 2014-2019 seasons and the Test Set as the 2020 season data.\n",
-    "\n",
-    "Points and Finish Position variables were included in the train-test split, and then popped out to create **r_train** and **r_test** *(Finish Position)*, & **p_train** & **p_test** *(Points)*. These are to be used as follows:\n",
-    "\n",
-    "* `r-train & r_test` : compared with the positional predictions to find the R<sup>2</sup> Score using Sci-Kit Learn's Metrics module.\n",
-    "\n",
-    "* `p_train & p_test`: compared with the aggregated points predictions at the end to check correlations and other metrics between the true and predicted points.\n",
-    "\n",
-    "The defined `Target Variable` for the train-test split was aforementioned **Filled Splits** variable.\n",
-    "___\n",
-    "### E. Column Transform & Pipeline\n",
-    "\n",
-    "<!-- applied a Count Vectorizer using stopwords from the NLTK library along with selected additional words which I added through experimentation. Given the sheer size of the sparse matrix produced by this and with a mind on processing/modelling time I decided to limit the \"max_features\" parameter to 10,000 although I did do some experimentation with \"ngram_range\" and and \"max_features\" as can be seen in the notebook.-->\n",
-    "\n",
-    "For transforming the data into a model-ready format, I used Sci-Kit Learn ColumnTransformers and Pipelines.\n",
-    "___\n",
-    "#### a. Column Transformers\n",
-    "The three types of transformation I employed for the final dataset were:\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "| OneHotEncoder | StandardScaler | CountVectorizer |\n",
-    "| :--- | :--- | :--- |\n",
-    "| Season | Q_best | Weather |\n",
-    "| Round | Q_worst | |\n",
-    "| Grid Position | Q_mean | |\n",
-    "| Qualifying Position | Age During Race | |\n",
-    "| Country | Lap Length | |\n",
-    "| Type of Circuit (Street or Road) | | |\n",
-    "| Clockwise Direction | | |\n",
-    "| Locality | | |\n",
-    "| Race Name | | |\n",
-    "\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "Whilst the following data was passed through:\n",
-    "* Driver Name\n",
-    "* Constructor\n",
-    "___\n",
-    "#### b. Pipelines\n",
-    "In building the pipelines, I used the make_pipeline() function as part of the Sci-Kit Learn Pipeline library. For preliminary tuned model comparison, I mounted the Column Transformer for translating the data into the correct format for model usage, followed by a GridSearchCV or RandomizedSearchCV which was loaded with the model of choice. Following this I employed 'for' loops, iterating through a selection of models and parameters and building pipelines within the loops to fit, score and compare the models.\n",
-    "\n",
-    "___\n",
-    "### F. Choosing the Correct Model\n",
-    "For initial tuning & model selection, a custom Grid Search function was built to assess the selection of models and find the best performer in terms of Coefficient of Determination and Pearson Correlation across both the Driver and Constructor Championships  simultaneously using the 'Predicted Splits' Target.\n",
-    "After several days of Cross-Validation, the Extreme Gradient Boost model turned out to be the best among all tested, closely followed by the Random Forest model (good scores achieved for both).\n",
-    "\n",
-    "The following models were those that were tested using CV:\n",
-    "\n",
-    "* Linear Regression\n",
-    "* **Lasso penalised Linear Regression**\n",
-    "* Ridge penalised Linear Regression\n",
-    "* Decision Tree\n",
-    "* K Nearest Neighbours Regressor\n",
-    "* Epsilon-Support Vector Regressor\n",
-    "\n",
-    "\n",
-    "Lasso, highlighted in bold, was the best performing of these models.\n",
-    "\n",
-    "The following Ensemble Methods were then evaluated using CV:\n",
-    "\n",
-    "* Neural Network (Multi-Layered Perceptron Regressor)\n",
-    "* Random Forest Regressor\n",
-    "* **Extreme Gradient Boost Regressor**\n",
-    "* Gradient Boosting Regressor with Linear Regression estimator\n",
-    "* Gradient Boosting Regressor with Lasso estimator\n",
-    "* Bagging Regressor with Linear Regression estimator\n",
-    "* Bagging Regressor with Lasso estimator\n",
-    "\n",
-    "Many tuning steps were taken during project assembly, with many different variations of parameters sampled. Eventually, it was the following set of parameters for the XGB model that achieved the best results:\n",
-    "\n",
-    "| Param | Value |\n",
-    "| :--- | --- |\n",
-    "| gamma | 0.1 |\n",
-    "| learning_rate | 0.2 |\n",
-    "| max_depth | 6 |\n",
-    "| n_estimators | 150 |\n",
-    "| reg_alpha | None |\n",
-    "| reg_lambda | 0.2 |\n",
-    "| subsample | 1 |\n",
-    "\n",
-    "___\n",
-    "### G. Results\n",
-    "The initial R<sup>2</sup> results for the regression output of the XGB Model were:\n",
-    "\n",
-    "* `Training Set` : 0.92\n",
-    "* `Test Set` : -0.22\n",
-    "\n",
-    "The next section goes into further detail as to how the Regression results were transformed into positions for the drivers.\n",
-    "___\n",
-    "___\n",
-    "## 4. Converting Results back to Classification Form\n",
-    "In order to convert the model results back to classification, I iterated through the separate results for each race and sorted them into an ordered list of results, taking the index position of each result and applying the ‘index + 1’ to a new column for the ‘Predicted Finish Positions’.\n",
-    "___\n",
-    "___\n",
-    "## 5. Measuring Success of the Model\n",
-    "Since the model’s output is now in the form of distinct positions, I wrote a function for adding a new column to the results dataframe containing the number of points associated with each position as at the 2020 season. These are as follows:\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "| Position | Points |\n",
-    "| :--- | ---: |\n",
-    "| 1st | 25 |\n",
-    "| 2nd | 18 |\n",
-    "| 3rd | 15 |\n",
-    "| 4th | 12 |\n",
-    "| 5th | 10 |\n",
-    "| 6th | 8 |\n",
-    "| 7th | 6 |\n",
-    "| 8th | 4 |\n",
-    "| 9th | 2 |\n",
-    "| 10th | 1 |\n",
-    "| 11th+ | 0 |\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "Upon initial inspection of the R<sup>2</sup> Score between positions, the score was very low, with only 16.47% of the true positions matching those that were predicted.\n",
-    "\n",
-    "However, since the model's performance was not to be evaluated on predictive power with regard to individual finish positions, I decided to look into varying margins of error to see what percentage of predictions are within a particular range of their target, since upon aggregation these errors may cumulatively cancel to provide greater predictive accuracy that anticipated via the R<sup>2</sup> Score.\n",
-    "\n",
-    "The following percentages relate to the permissible margins of error listed, up to a permissible predictive error of plus/minus 3 positions.\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "| +/- Positions | Percentage Match |\n",
-    "| :--- | ---: |\n",
-    "| 0 | 16.47% |\n",
-    "| 1 | 35.88% |\n",
-    "| 2 | 52.35% |\n",
-    "| 3 | 64.12% |\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "As can be seen from the table above, with each increase in margin of error for predicted positions, there is a relatively large increase in the number of predictions within the margin from the true value, filling me with some optimism for the model's outcome accuracy.\n",
-    "\n",
-    "Using the results table with the now assigned points scored, I used the inbuilt pandas `.groupby()` method to separately groupby constructor and driver for the respective championships and aggregate by summing up the points for each of the groups to produce two separate Predicted Standings tables, as shown below.\n",
-    "___\n",
-    "### A. Driver Championship\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "| Driver | Pred Points | True Points | Pred Pos | True Pos | Pos Error (Diff: Pred - True) |\n",
-    "| :--- | --- | --- | --- | --- | --- |\n",
-    "| Lewis Hamilton | 330 | 347 | 1 | 1 | 0 |\n",
-    "| Valtteri Bottas | 269 | 223 | 2 | 2 | 0 |\n",
-    "| Max Verstappen | 230 | 214 | 3 | 3 | 0 |\n",
-    "| Sergio Pérez | 119 | 125 | 4 | 4 | 0 |\n",
-    "| Daniel Ricciardo | 114 | 119 | 5 | 5 | 0 |\n",
-    "| Lando Norris | 109 | 97 | 6 | 9 | -3 |\n",
-    "| Alex Albon | 99 | 105 | 7 | 6 | 1 |\n",
-    "| Charles LeClerc | 92 | 98 | 8 | 8 | 0 |\n",
-    "| Carlos Sainz | 82 | 105 | 9 | 6 | 3 |\n",
-    "| Lance Stroll | 68 | 75 | 10 | 10 | 0 |\n",
-    "| Daniil Kvyat | 42 | 32 | 11 | 14 | -3 |\n",
-    "| Sebastian Vettel | 38 | 33 | 12 | 13 | -1 |\n",
-    "| Pierre Gasly | 34 | 75 | 13 | 10 | 3 |\n",
-    "| Esteban Ocon | 29 | 62 | 14 | 12 | 2 |\n",
-    "| George Russell | 20 | 3 | 15 | 18 | -3 |\n",
-    "| Kimi Räikkönen | 17 | 4 | 16 | 16 | 0 |\n",
-    "| Nico Hülkenberg | 16 | 10 | 17 | 15 | 2 |\n",
-    "| Antonio Giovinazzi | 6 | 4 | 18 | 16 | 2 |\n",
-    "| Kevin Magnussen | 3 | 1 | 19 | 20 | -1 |\n",
-    "| Jack Aitken | 0 | 0 | 20 | 21 | -1 |\n",
-    "| Nicholas Latifi | 0 | 0 | 20 | 21 | -1 |\n",
-    "| Pietro Fittipaldi | 0 | 0 | 20 | 21 | -1 |\n",
-    "| Romain Grosjean | 0 | 2 | 20 | 19 | 1 |\n",
-    "| **Total** | **-** | **-** | **-** | **-** | **0** |\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "As can be seen above, 8 of the positions were predicted exactly, including Lewis Hamilton, Valtteri Bottas, Max Verstappen, Sergio Pérez, Daniel Ricciardo, Charles LeClerc, Lance Stroll and Kimi Räikkönen. Those at the very top, Lewis Hamilton, Valtteri Bottas and Max Verstappen are arguably quite easy predictions to make. Although there is a lot of unpredictability in the sport, these are a combination of the most skilled drivers on the grid and the top two constructors on the grid. It was also evident from the model's coefficients that the Mercedes team was the strongest factor in finishing in a top position, and so it was very unlikely that there was going to be any competitor for these top two positions in the Drivers' Standings.\n",
-    "\n",
-    "Aside from these, many of the drivers are in roughly the correct positions, with error of 3 as maximum.\n",
-    "\n",
-    "The cumulative total of the Positions Error is 0.\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "![driver-standing-plot](images/driver_standing_true_v_pred.png)\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "*All metrics are calculated on the `Predicted/True Points`:*\n",
-    "\n",
-    "| Metric | Score |\n",
-    "| --- | --- |\n",
-    "| Spearman Rank Correlation | 0.9705 |\n",
-    "| Pearson Correlation | 0.9807 |\n",
-    "| R2 Score | 0.9601 |\n",
-    "| Mean Squared Error | 300.74 |\n",
-    "| Root Mean Squared Error | 17.342 |\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "___\n",
-    "### B. Constructor Championship\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "| Constructor | Pred Points | True Points | Pred Pos | True Pos |\n",
-    "| :--- | --- | --- | --- | --- |\n",
-    "| Mercedes | 617 | 573 | 1 | 1 |\n",
-    "| Red Bull | 329 | 319 | 2 | 2 |\n",
-    "| Racing Point | 203 | 195 | 3 | 4 |\n",
-    "| McLaren | 191 | 202 | 4 | 3 |\n",
-    "| Renault | 143 | 181 | 5 | 5 |\n",
-    "| Ferrari | 130 | 131 | 6 | 6 |\n",
-    "| Alphatauri | 76 | 107 | 7 | 7 |\n",
-    "| Alfa Romeo | 23 | 8 | 8 | 8 |\n",
-    "| Haas | 3 | 3 | 9 | 9 |\n",
-    "| Williams | 2 | 0 | 10 | 10 |\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "For the Constructors' Standings predictions, I expected slightly better results than those in the Drivers' Standings since the error in the standings would receive yet more dampening via further aggregation to achieve only the Constructors' points and positions.\n",
-    "\n",
-    "Again, Mercedes convincingly at the top of the table as per the model's coefficients, with perhaps heightened bias due to previous years' results. Following this, Red Bull and some likely suspects lower in the table in Williams' who have been uncharacteristically low performers in the hybrid era, and Haas, who have had a less than exemplary run in Formula 1 since entering the sport in 2014.\n",
-    "\n",
-    "To analyse the results for the Constructors' Standings, we can see that all Constructors have been correctly predicted bar those in the 3rd & 4th place positions, giving 80% correct positional prediction.\n",
-    "\n",
-    "Interestingly, McLaren only achieved third place in the championship in the last race of the season due to a poor race and retirement of a driver from the Racing Point team, who seemed destined for third place.\n",
-    "\n",
-    "McLaren also achieved this off the back of a very poor run in the hybrid era (as discussed previously), where they had more than one 8th place finishes in the recently preceding years.\n",
-    "\n",
-    "As we can see from the above table, the only team out of position of those above is the McLaren team, forcing Racing Point to slide down to 4th place.\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "![constructor-standing-plot](images/constructor_standing_true_v_pred.png)\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "*All metrics are calculated on the `Predicted/True Points`:*\n",
-    "\n",
-    "| Metric | Score |\n",
-    "| --- | --- |\n",
-    "| Spearman Rank Correlation | 0.9879 |\n",
-    "| Pearson Correlation | 0.9941 |\n",
-    "| R2 Score | 0.9823 |\n",
-    "| Mean Squared Error | 485.60 |\n",
-    "| Root Mean Squared Error | 22.036 |\n",
-    "\n",
-    "<br>\n",
-    "\n",
-    "___\n",
-    "___\n",
-    "## 6. Conclusion & Lessons Learned\n",
-    "\n",
-    "It is interesting that there was more error in predictions amongst the Drivers' Championship. A common topic in Formula 1 is: \n",
-    "\n",
-    "`\"is the Driver's success down to the driver, or the car?\"`\n",
-    "\n",
-    "With such certainty in the predictions of the **Constructors' Championship**, it appears that the teams that are the best will always win. However, McLaren were able to pull something unexpected out of the bag in claiming a 3rd place finish, so perhaps there is more excitement amongst constructors than a ten-team championship could possibly show on paper.\n",
-    "\n",
-    "On the subject the **Drivers' Championship**, There is a lot of unpredictability in terms of positions. Although the Pearson & Spearman Rank Correlations are very high, as is R<sup>2</sup> Score, there is a reasonable amount of error in the predicted standings. This shows that, at the top level, the better the car, generally the better the position in the Constructors' Championship. However, in the Drivers' Championship, whilst the top spots might be off-limits to those in mid- and lower-tier technology, there is still a lot to challenge for within a drivers' tier, and driver prowess counts for just as much as the technology they're provided with when trying to extract the best out of the constructors' cars.\n",
-    "\n",
-    "___\n",
-    "___\n",
-    "## 7. Future Recommendations\n",
-    "\n",
-    "Moving forwards, there are a few things in particular I’d like to focus on to test for improvement in the model:\n",
-    "\n",
-    "* Look into availability of more granular hourly weather data to combine with the observed weather data.\n",
-    "    * May not be possible to access timely, location specific data but worth investing time into.\n",
-    "* NLP containing some potentially redundant text.\n",
-    "    * Create more granular data from the scraped weather information - separate air temperature, track temperature, wind speed and general information from the raw scrape.\n",
-    "    * Test use of different stopwords over the more granular data.\n",
-    "* Expand the training data to incorporate previous years examine how this would affect predictions.\n",
-    "* Further expand the range of models tested and tuned, e.g. XGBoost.\n",
-    "* Test more finite variations in model parameters to incrementally improve scores further.\n",
-    "* Employ cloud computing to offload some of the computation time to optimise model performance.\n",
-    "* Look at creating a web app to predict for different seasons using the current data."
-   ]
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python 3",
-   "language": "python",
-   "name": "python3"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.8.5"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 5
-}
+# Formula 1 Race Points Predictor
+___
+___
+### Question: “Can we predict the 2020 Formula 1 Championship, training on pre-2020 data?”
+___
+___
+## Goals of the project (Table of Contents)
+
+The goal of the project was as follows:
+
+1. [Collecting the Data](#1.-Collecting-the-Data)
+    1. [Ergast API](#A.-Ergast-API)
+    2. [Additional Scraping](#B.-Additional-Scraping)
+2. [EDA](#2.-EDA)
+    1. [Correlation](#A.-Correlation)
+    2. [Age](#B.-Age)
+    3. [Mistakes](#C.-Mistakes)
+    4. [Circuits](#D.-Circuits)
+3. [Modelling](#3.-Modelling)
+    1. [Regression/Classification Problem](#A.-Regression/Classification-Problem)
+        1. [Justification](#a.-Justification)
+        2. [Methodology](#b.-Methodology)
+    2. [Success Metrics](#B.-Success-Metrics)
+    3. [Feature Engineering](#C.-Feature-Engineering)
+    4. [Final Features & Train-Test Split](#D.-Final-Features-&-Train-Test-Split)
+    5. [Column Transform & Pipeline](#E.-Column-Transform-&-Pipeline)
+        1. [Column Transformers](#a.-Column-Transformers)
+        2. [Pipelines](#b.-Pipelines)
+    6. [Choosing the Correct Model](#F.-Choosing-the-Correct-Model)
+    7. [Results](#G.-Results)
+4. [Converting Results back to Classification Form](#4.-Converting-Results-back-to-Classification-Form)
+5. [Measuring Success of the Model](#5.-Measuring-Success-of-the-Model)
+    1. [Driver Championship](#A.-Driver-Championship)
+    2. [Constructor Championship](#B.-Constructor-Championship)
+6. [Conclusion & Lessons Learned](#6.-Conclusion-&-Lessons-Learned)
+7. [Future Recommendations](#7.-Future-Recommendations) - *what next?*
+___
+___
+## 1. Collecting the Data
+
+The data was collected from Ergast API, which holds data harvested from the Formula 1 website. The API itself holds all information on races, results, drivers, qualifying, lap times, pit stops, constructors’ and drivers’ standings and circuits from Formula 1’s inception in 1950 to date.
+
+The scraping code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Data%20Collection.ipynb)
+
+The data acquired for each table was as below:
+___
+### A. Ergast API
+
+<br>
+
+**`PREDICTOR DATA:`**
+
+| Races | Circuits | Drivers | Results | Qualifying |
+| :--- | :--- | :--- | :--- | :--- |
+| Season | Circuit ID | Driver ID | Season | Season |
+| Round | Circuit Name | Name | Round | Round |
+| Race Name | Latitude | Nationality | Circuit ID | Circuit ID |
+| Circuit ID | Longitude | Driver Code | Driver ID | Driver ID |
+| Latitude | Locality | Date of Birth | Finish Position | Qualifying Position |
+| Longitude | Country | | Date of Birth | Constructor |
+| Country | Wikipedia URL | | Nationality | Q1 |
+| Date | | | Constructor | Q2 |
+| Wikipedia URL | | | Grid | Q3 |
+| | | | Time |
+| | | | Status |
+| | | | Points |
+
+<br><br>
+
+**`OUTCOME COMPARISON DATA:`**
+
+| 2020 Constructor Standings | 2020 Driver Standings |
+| --- | --- |
+| Constructor Name | Driver ID |
+| Position | Position |
+| Points | Points |
+___
+### B. Additional Scraping
+
+<br>
+
+**`Races:`**
+* Added to Races DataFrame using Wikipedia URLs & BeautifulSoup:
+    * *Weather Data*
+    * *Overall Race Distance that year*
+* Added additional Weather Data to Races via F1-Fansite.com using manipulated Race Name variable, Selenium undetected chromedriver & BeautifulSoup.
+
+<br>
+
+**`Circuits:`**
+* Type of Circuit (Street or Road)
+* Clockwise Direction
+* Lap Length
+
+___
+___
+## 2. EDA
+
+The EDA & Visualisation code & detailed steps taken can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Visualisation.ipynb)
+
+*`Click to expand the headers below containing plots.`*
+
+### A. Correlation
+
+___
+<details>
+    
+<summary> How Correlated are the dependent variables? </summary>
+
+![correlations](images/correlations.png)
+
+As can be seen above, there is little correlation amongst the variables bar those which are closely related in some way, for example the **Q_best**, **Q_mean** & **Q_worst** qualifying times and the **Qualifying**, **Grid** and **Finish positions**. Curiously, of **Qualifying Position** and **Grid Position**, it is **Qualifying Position** that is more closely related to the **Finish Position**. The difference here is that **Grid Position** is essentially the same as **Qualifying Positions** in most cases, bar those where certain drivers have received a grid-place penalty or are unable to start the race for any reason, whereby they will drop down the grid and other drivers will move up.
+This hints at some reliability and predictability with drivers and machinery, showing that those drivers who are strong qualifiers will likely be able to claim back a position that better resembles their speed in comparison with other drivers.
+Another interesting non-correlation is that of the **Q_best**, **Q_mean** & **Q_worst** and the **Qualifying Position**. Of course, this is likely down to the fact that each track is a different length and can maintain a different average speed throughout the lap. Therefore, across the full dataset of all tracks and all lap times, it is reasonable to say that there is little correlation, although circuit by circuit there would definitely be a high correlation between these variables (although it would be very unlikely these would be 100% correlated.)
+</details>
+
+___
+### B. Age
+
+Age is a defining factor for many decisions made by teams. Younger drivers can be sharp and skillful, but also reckless and emotional. There comes a time where the benefits of youth and experience reach an equilibrium - the drivers’ youthful reactions are met by reliability and maturity. Here, drivers are at their most likely to win races, and are also most likely to appear attractive prospects to teams that are looking for their next big investment in a driver. If one of the top-tier teams was looking for their next driver to help contend for a world championship, one with plenty of years ahead, youthful skills but also the composure to guarantee consistency would be the ideal candidate.
+___
+<details>
+
+<summary> i. What is the Volume of Point Scorers by Age since 2014 </summary>
+
+![age_point_freq](Tableau_Charts/age_point_frequency.png)
+
+The diagram above shows the peak to be at the age of 25, with a strong right skew and several stages to the decline.
+
+The reasoning for such a strong right skew is two-fold. Firstly, we have decisions made by constructors. Most years you can expect to see at least one or two of the new wave of up-and-coming drivers from Formula 2 come onto the scene in Formula 1. These drivers are always young and replacing someone who has not been performing and/or making a difference for their team. Because of this, the turnover of young drivers is very high and there is a sort of cut-off age past which only the drivers that have proven to have the necessary mettle and an element of luck are able to remain in the sport. It is for this reason that there are so many drivers of a young age competing in the sport, and of those who are able to cement their position in the sport there is then the everlasting pressure of the tradeoff between performance for their team and the viability of investing in the driver for the future of their team. Therefore as time moves on, the older drivers will eventually be dropped from the best teams to lower-tier teams where their experience will still provide some benefit, and then altogether from Formula 1, unless those drivers are particularly rare drivers that are able to continue to score points well into their late 30s and early 40s (e.g. Kimi Räikkönen, Fernando Alonso etc.)
+
+</details>
+
+___
+<details>
+
+<summary> ii. Average number of Point-Scoring Positions achieved by Age </summary>
+
+![age_point_ave](Tableau_Charts/age_point_average.png)
+
+In the diagram above, we see the opposite side of the coin. The diagram shows the average number of point scoring positions by age of a driver. We know that there is a high volume of young drivers which begins to decline at the age of 27, and with so many unsuccessful drivers being eliminated from teams prior to this age it is understandable that the average number of positions in the points for these ages will be substantially lower. Once we reach the ages of 27+, the average climbs rapidly, since the volume of drivers that make it in Formula 1 through this stage have established themselves in a good team due to strong performance and consistency. From around the 33-year-old mark things are unsurprisingly beginning to fall away as teams would begin to younger drivers as they look towards the future of the teams and drivers are beginning to lose their edge. There are, however, some exceptions - for example the sky-high average point-scoring finishes for 38-year-old drivers was achieved completely in one year by Kimi Räikkönen, who had such a huge effect due to a season of incredible performance and so few other 38-year-old drivers.
+    
+</details>
+
+___
+### C. Mistakes
+What makes Formula 1 so unpredictable is the inability to predict a drivers’ or constructors’ race-ending event. For example, an illness, a crash, an engine fault, a brake fault or simply a problem in the pit lane that means a car goes into the pits leading the race convincingly, and then never leaves the pits due to a problem with pit machinery forcing the car to retire. This happens very often in Formula 1, with at least one DNF to be expected every race and sometimes up to 7 or more in one race!
+
+It is important to look at driver and constructor consistency to understand why things might have unfolded as they have in the respective championships.
+___
+<details>
+
+<summary> i. Average Number of Mistakes by Drivers with 20+ Races </summary>
+
+![driver_mistakes](Tableau_Charts/driver_issues_20plus_races_avg_mistakes.png)
+
+Unsurprisingly, at the very top we can see 7-time world champion Lewis Hamilton, well renowned for his risk-conscious driving style, minimising the potential for any endangerment of his position or potential win. This, combined with his overall control of the car, enabled him to ensure he didn’t lose a race in the wet, which is classically characterised as unpredictable personified, for 5 years.
+
+Looking further below Lewis Hamilton, we see multiple other world champions and title contenders, including Nico Rosberg, Valtteri Bottas, Sebastian Vettel, Daniel Ricciardo and Kimi Räikkönen.
+
+At the bottom we can see many of the names now committed to Formula 1 history, including Pastor Maldonado, Esteban Gutierrez, Pascal Wehrlein, Jolyon Palmer and Marcus Ericsson.
+
+Interestingly, there are some names here that are displaced according to this rule. Max Verstappen, the star driver of the Red Bull Racing team and 3rd place finisher after the two dominant Mercedes drivers for the past 2 seasons, shows a comparatively high number of mistakes sitting about ⅔ down in the table. This can be explained by his junior years in F1 from 2015 onwards, where he raced for Renault and then moved to Red Bull in 2016. As discussed previously, it is expected for drivers to make more mistakes during the early days of their career whilst they learn to control temper, manage pressure and become more vigilant in scenarios that could potentially pose damage to their car.
+
+The other, Jenson Button, is highly intriguing since during the time reviewed he will have been in the latter days of his F1 career, following his world championship title in 2009.
+Combining deeper investigation with prior knowledge on the progression of Jenson Button’s road to retirement, I would surmise that due to repeated years of uncompetitive machinery and misfortune following 2009 and his decline in motivation to compete in Formula 1 led to more personal mistakes when behind the wheel.
+
+</details>
+
+___
+<details>
+
+<summary> ii. Average Number of Mistakes by Constructors since 2014 </summary>
+
+![constructor_mistakes](Tableau_Charts/constructor_issues_faults.png)
+
+Looking at Constructors’  mistakes, we see the two most successful F1 teams of all time right at the top with the lowest percentage of mistakes vs. races entered. The combined consistency of Mercedes and their drivers Lewis Hamilton, Nico Rosberg and Valtteri Bottas is apparent, and it comes as no surprise that the top 2 spots in the Drivers’ Championships over 5 of the last 7 seasons (2014 - 2020) have been occupied by whichever of these three drivers have been racing Mercedes’ equipment.
+
+Red Bull and Alpha Tauri positioned next to each other, understandably since they are essentially Red Bull’s 1st and 2nd team and therefore use much of the same starting kit inside the cars meaning base reliability should be very similar between these two before separate development begins.
+
+McLaren had many issues in the years following the 2014 season, with 9th place finishes in 2015 and 2017 before incrementally returning to form reminiscent of their former glory, culminating in a third place finish in 2020.
+
+Renault, after taking control of the Lotus F1 team in 2016, had some poor performance in the early days of their hybrid era appearances with a 9th place finish in 2016 while getting their cars and team up-to-speed. Lotus, having performed well between 2012 and 2013, lost both their CEO and their Team Principal (who joined McLaren instead) in 2014, gaining a new Team Principal with no prior Formula 1 experience. Finishing 8th overall in the standings in 2014 and facing problem after problem for both drivers in 2015, Renault had a lot of work to do to recover some of the team’s performance from 2016, and have been improving since.
+
+Right at the bottom we have Caterham, dubbed one of the worst Formula 1 teams of all time, plagued by failure throughout its 2012-2014 lifespan before closing down permanently at the end of 2014 having never scored a point.
+
+</details>
+
+___
+### D. Circuits
+___
+
+<details>
+
+<summary> Circuits Used since 2014 & Magnitude </summary>
+
+![race-venues](Tableau_Charts/race_venue_distribution.png)
+
+</details>
+
+___
+___
+## 3. Modelling
+
+The modelling and evaluation code can be found in the following notebook: [LINK](https://github.com/willgeorge93/Formula1/blob/main/Formula%201%20-%20Modelling.ipynb)
+
+### A. Regression/Classification Problem 
+#### a. Justification
+At this stage, I noticed that if I were to choose a Classification Model, there would be danger of multiple of the same class (position) predicted for a particular race, and perhaps some missing positions. Since classification models can’t be trained to select one of each class, I decided to move forward with a Regression Model.
+___
+#### b. Methodology
+Since one win does not necessarily equate to another, e.g. if a driver wins by a margin of 30 seconds to second place, and another wins by a margin of 1 second to the second place driver, these wins should have some weighting to represent the level of dominance of that driver when performing well.
+
+Therefore, instead of using the ‘Finish Position’ variable, I manufactured a ‘Split Time’ variable by taking the ‘Race Time’ of the first-place finisher for each race and determined the difference of each driver’s Race Time to the first-place finisher. It should be noted that only those who aren’t lapped during the race actually finish the race. As soon as the first-place driver crosses the line, the next time each of the remaining drivers crosses the line it will complete their race, so for a race that is 57 laps long, 56 laps will be completed by those who are lapped once, and 55 for those who are lapped twice.
+For this reason, the time of the last driver not to be lapped was carried forward to all other drivers and then the time multiplied by the number of laps lapped by. The majority of the time, at least the first 8-9 drivers will cross the line without being lapped, and since only the top ten finishers score points in a Formula 1 race, the impact of the homogenised target variable should be of minimal consequence.
+___
+### B. Success Metrics
+Despite the use of a regression model, I have decided to use metrics pertaining to a classification model since the results will be converted back into integer positions for evaluation.
+
+This in mind, the success metrics I have chosen are Spearman Rank & Pearson Correlations and R2 Score on predicted and true positions and the MSE and RMSE on the predicted and true points.
+___
+### C. Feature Engineering
+In addition to those features acquired during the Data Collection phase, I created some of my own. After identifying which of the different features I would be able to use to train and/or test the model, I looked to those features I might not be able to make use of for one reason or another. I decided that the following was true:
+
+* Date of Birth of Drivers alone would not be relevant to any form of success.
+* Date of the Race would not have any influence on Driver/Constructor performance.
+* Since 2nd and 3rd Rounds of Qualifying don’t involve all drivers, the info can’t be used as is.
+___
+**1. Date of Birth & Race Date**
+
+In order to create a better variable from the Date of Birth and Race Date features, I decided to use datetime to convert the dates into a format with which I could find the length of time between the two dates (in days). For each entry in the data, there was then an entry for the age of each of the drivers at the time of the race.
+
+**2. Qualifying Rounds**
+
+Not all drivers compete in all rounds of qualifying. The qualifying structure is:
+
+* `Q1` : all 20 drivers take part, posting the best time they can for the session. Those in the 16th - 20th places are then set in position.
+    
+* `Q2` : the top 15 take part, once again posting their fastest lap time. The 11th - 15th fastest are then set in position.
+    
+* `Q3` : the remaining drivers set out one final time to post the best time they can and all positions are then decided at the end of Q3.
+
+If the qualifying data was used as originally held, around half of the instances in the data would contain null values in certain qualifying sessions. In order to ensure all qualifying data could be used, I created Q_mean, Q_worst and Q_best variables:
+
+* `Q_mean` : the average time across the best times for each qualifying round involved in.
+
+* `Q_best` : the best time across the best times for each qualifying round involved in.
+    
+* `Q_worst` : the worst time across the best times for each qualifying round involved in.
+___
+### D. Final Features & Train-Test Split
+The data carried forwards to the model is as follows:
+* Season
+* Round
+* Race Name
+* Driver Name
+* Constructor
+* Grid Position
+* Qualifying Position
+* Q_best
+* Q_worst
+* Q_mean
+* Age During Race
+* Locality
+* Country
+* Type of Circuit (Street or Road)
+* Clockwise Direction
+* Lap Length
+* Weather
+* Finish Position
+* Points
+* Filled Splits
+
+
+Given that the aim of the model is to predict the Constructors’ and Drivers’ Standings, the Training Set was defined as data from the 2014-2019 seasons and the Test Set as the 2020 season data.
+
+Points and Finish Position variables were included in the train-test split, and then popped out to create **r_train** and **r_test** *(Finish Position)*, & **p_train** & **p_test** *(Points)*. These are to be used as follows:
+
+* `r-train & r_test` : compared with the positional predictions to find the R<sup>2</sup> Score using Sci-Kit Learn's Metrics module.
+
+* `p_train & p_test`: compared with the aggregated points predictions at the end to check correlations and other metrics between the true and predicted points.
+
+The defined `Target Variable` for the train-test split was aforementioned **Filled Splits** variable.
+___
+### E. Column Transform & Pipeline
+
+<!-- applied a Count Vectorizer using stopwords from the NLTK library along with selected additional words which I added through experimentation. Given the sheer size of the sparse matrix produced by this and with a mind on processing/modelling time I decided to limit the "max_features" parameter to 10,000 although I did do some experimentation with "ngram_range" and and "max_features" as can be seen in the notebook.-->
+
+For transforming the data into a model-ready format, I used Sci-Kit Learn ColumnTransformers and Pipelines.
+___
+#### a. Column Transformers
+The three types of transformation I employed for the final dataset were:
+
+<br>
+
+| OneHotEncoder | StandardScaler | CountVectorizer |
+| :--- | :--- | :--- |
+| Season | Q_best | Weather |
+| Round | Q_worst | |
+| Grid Position | Q_mean | |
+| Qualifying Position | Age During Race | |
+| Country | Lap Length | |
+| Type of Circuit (Street or Road) | | |
+| Clockwise Direction | | |
+| Locality | | |
+| Race Name | | |
+
+
+<br>
+
+Whilst the following data was passed through:
+* Driver Name
+* Constructor
+___
+#### b. Pipelines
+In building the pipelines, I used the make_pipeline() function as part of the Sci-Kit Learn Pipeline library. For preliminary tuned model comparison, I mounted the Column Transformer for translating the data into the correct format for model usage, followed by a GridSearchCV or RandomizedSearchCV which was loaded with the model of choice. Following this I employed 'for' loops, iterating through a selection of models and parameters and building pipelines within the loops to fit, score and compare the models.
+
+___
+### F. Choosing the Correct Model
+For initial tuning & model selection, a custom Grid Search function was built to assess the selection of models and find the best performer in terms of Coefficient of Determination and Pearson Correlation across both the Driver and Constructor Championships  simultaneously using the 'Predicted Splits' Target.
+After several days of Cross-Validation, the Extreme Gradient Boost model turned out to be the best among all tested, closely followed by the Random Forest model (good scores achieved for both).
+
+The following models were those that were tested using CV:
+
+* Linear Regression
+* **Lasso penalised Linear Regression**
+* Ridge penalised Linear Regression
+* Decision Tree
+* K Nearest Neighbours Regressor
+* Epsilon-Support Vector Regressor
+
+
+Lasso, highlighted in bold, was the best performing of these models.
+
+The following Ensemble Methods were then evaluated using CV:
+
+* Neural Network (Multi-Layered Perceptron Regressor)
+* Random Forest Regressor
+* **Extreme Gradient Boost Regressor**
+* Gradient Boosting Regressor with Linear Regression estimator
+* Gradient Boosting Regressor with Lasso estimator
+* Bagging Regressor with Linear Regression estimator
+* Bagging Regressor with Lasso estimator
+
+Many tuning steps were taken during project assembly, with many different variations of parameters sampled. Eventually, it was the following set of parameters for the XGB model that achieved the best results:
+
+| Param | Value |
+| :--- | --- |
+| gamma | 0.1 |
+| learning_rate | 0.2 |
+| max_depth | 6 |
+| n_estimators | 150 |
+| reg_alpha | None |
+| reg_lambda | 0.2 |
+| subsample | 1 |
+
+___
+### G. Results
+The initial R<sup>2</sup> results for the regression output of the XGB Model were:
+
+* `Training Set` : 0.92
+* `Test Set` : -0.22
+
+The next section goes into further detail as to how the Regression results were transformed into positions for the drivers.
+___
+___
+## 4. Converting Results back to Classification Form
+In order to convert the model results back to classification, I iterated through the separate results for each race and sorted them into an ordered list of results, taking the index position of each result and applying the ‘index + 1’ to a new column for the ‘Predicted Finish Positions’.
+___
+___
+## 5. Measuring Success of the Model
+Since the model’s output is now in the form of distinct positions, I wrote a function for adding a new column to the results dataframe containing the number of points associated with each position as at the 2020 season. These are as follows:
+
+<br>
+
+| Position | Points |
+| :--- | ---: |
+| 1st | 25 |
+| 2nd | 18 |
+| 3rd | 15 |
+| 4th | 12 |
+| 5th | 10 |
+| 6th | 8 |
+| 7th | 6 |
+| 8th | 4 |
+| 9th | 2 |
+| 10th | 1 |
+| 11th+ | 0 |
+
+<br>
+
+Upon initial inspection of the R<sup>2</sup> Score between positions, the score was very low, with only 16.47% of the true positions matching those that were predicted.
+
+However, since the model's performance was not to be evaluated on predictive power with regard to individual finish positions, I decided to look into varying margins of error to see what percentage of predictions are within a particular range of their target, since upon aggregation these errors may cumulatively cancel to provide greater predictive accuracy that anticipated via the R<sup>2</sup> Score.
+
+The following percentages relate to the permissible margins of error listed, up to a permissible predictive error of plus/minus 3 positions.
+
+<br>
+
+| +/- Positions | Percentage Match |
+| :--- | ---: |
+| 0 | 16.47% |
+| 1 | 35.88% |
+| 2 | 52.35% |
+| 3 | 64.12% |
+
+<br>
+
+As can be seen from the table above, with each increase in margin of error for predicted positions, there is a relatively large increase in the number of predictions within the margin from the true value, filling me with some optimism for the model's outcome accuracy.
+
+Using the results table with the now assigned points scored, I used the inbuilt pandas `.groupby()` method to separately groupby constructor and driver for the respective championships and aggregate by summing up the points for each of the groups to produce two separate Predicted Standings tables, as shown below.
+___
+### A. Driver Championship
+
+<br>
+
+| Driver | Pred Points | True Points | Pred Pos | True Pos | Pos Error (Diff: Pred - True) |
+| :--- | --- | --- | --- | --- | --- |
+| Lewis Hamilton | 330 | 347 | 1 | 1 | 0 |
+| Valtteri Bottas | 269 | 223 | 2 | 2 | 0 |
+| Max Verstappen | 230 | 214 | 3 | 3 | 0 |
+| Sergio Pérez | 119 | 125 | 4 | 4 | 0 |
+| Daniel Ricciardo | 114 | 119 | 5 | 5 | 0 |
+| Lando Norris | 109 | 97 | 6 | 9 | -3 |
+| Alex Albon | 99 | 105 | 7 | 6 | 1 |
+| Charles LeClerc | 92 | 98 | 8 | 8 | 0 |
+| Carlos Sainz | 82 | 105 | 9 | 6 | 3 |
+| Lance Stroll | 68 | 75 | 10 | 10 | 0 |
+| Daniil Kvyat | 42 | 32 | 11 | 14 | -3 |
+| Sebastian Vettel | 38 | 33 | 12 | 13 | -1 |
+| Pierre Gasly | 34 | 75 | 13 | 10 | 3 |
+| Esteban Ocon | 29 | 62 | 14 | 12 | 2 |
+| George Russell | 20 | 3 | 15 | 18 | -3 |
+| Kimi Räikkönen | 17 | 4 | 16 | 16 | 0 |
+| Nico Hülkenberg | 16 | 10 | 17 | 15 | 2 |
+| Antonio Giovinazzi | 6 | 4 | 18 | 16 | 2 |
+| Kevin Magnussen | 3 | 1 | 19 | 20 | -1 |
+| Jack Aitken | 0 | 0 | 20 | 21 | -1 |
+| Nicholas Latifi | 0 | 0 | 20 | 21 | -1 |
+| Pietro Fittipaldi | 0 | 0 | 20 | 21 | -1 |
+| Romain Grosjean | 0 | 2 | 20 | 19 | 1 |
+| **Total** | **-** | **-** | **-** | **-** | **0** |
+
+<br>
+
+As can be seen above, 8 of the positions were predicted exactly, including Lewis Hamilton, Valtteri Bottas, Max Verstappen, Sergio Pérez, Daniel Ricciardo, Charles LeClerc, Lance Stroll and Kimi Räikkönen. Those at the very top, Lewis Hamilton, Valtteri Bottas and Max Verstappen are arguably quite easy predictions to make. Although there is a lot of unpredictability in the sport, these are a combination of the most skilled drivers on the grid and the top two constructors on the grid. It was also evident from the model's coefficients that the Mercedes team was the strongest factor in finishing in a top position, and so it was very unlikely that there was going to be any competitor for these top two positions in the Drivers' Standings.
+
+Aside from these, many of the drivers are in roughly the correct positions, with error of 3 as maximum.
+
+The cumulative total of the Positions Error is 0.
+
+<br>
+
+![driver-standing-plot](images/driver_standing_true_v_pred.png)
+
+<br>
+
+*All metrics are calculated on the `Predicted/True Points`:*
+
+| Metric | Score |
+| --- | --- |
+| Spearman Rank Correlation | 0.9705 |
+| Pearson Correlation | 0.9807 |
+| R2 Score | 0.9601 |
+| Mean Squared Error | 300.74 |
+| Root Mean Squared Error | 17.342 |
+
+<br>
+
+___
+### B. Constructor Championship
+
+<br>
+
+| Constructor | Pred Points | True Points | Pred Pos | True Pos |
+| :--- | --- | --- | --- | --- |
+| Mercedes | 617 | 573 | 1 | 1 |
+| Red Bull | 329 | 319 | 2 | 2 |
+| Racing Point | 203 | 195 | 3 | 4 |
+| McLaren | 191 | 202 | 4 | 3 |
+| Renault | 143 | 181 | 5 | 5 |
+| Ferrari | 130 | 131 | 6 | 6 |
+| Alphatauri | 76 | 107 | 7 | 7 |
+| Alfa Romeo | 23 | 8 | 8 | 8 |
+| Haas | 3 | 3 | 9 | 9 |
+| Williams | 2 | 0 | 10 | 10 |
+
+<br>
+
+For the Constructors' Standings predictions, I expected slightly better results than those in the Drivers' Standings since the error in the standings would receive yet more dampening via further aggregation to achieve only the Constructors' points and positions.
+
+Again, Mercedes convincingly at the top of the table as per the model's coefficients, with perhaps heightened bias due to previous years' results. Following this, Red Bull and some likely suspects lower in the table in Williams' who have been uncharacteristically low performers in the hybrid era, and Haas, who have had a less than exemplary run in Formula 1 since entering the sport in 2014.
+
+To analyse the results for the Constructors' Standings, we can see that all Constructors have been correctly predicted bar those in the 3rd & 4th place positions, giving 80% correct positional prediction.
+
+Interestingly, McLaren only achieved third place in the championship in the last race of the season due to a poor race and retirement of a driver from the Racing Point team, who seemed destined for third place.
+
+McLaren also achieved this off the back of a very poor run in the hybrid era (as discussed previously), where they had more than one 8th place finishes in the recently preceding years.
+
+As we can see from the above table, the only team out of position of those above is the McLaren team, forcing Racing Point to slide down to 4th place.
+
+<br>
+
+![constructor-standing-plot](images/constructor_standing_true_v_pred.png)
+
+<br>
+
+*All metrics are calculated on the `Predicted/True Points`:*
+
+| Metric | Score |
+| --- | --- |
+| Spearman Rank Correlation | 0.9879 |
+| Pearson Correlation | 0.9941 |
+| R2 Score | 0.9823 |
+| Mean Squared Error | 485.60 |
+| Root Mean Squared Error | 22.036 |
+
+<br>
+
+___
+___
+## 6. Conclusion & Lessons Learned
+
+It is interesting that there was more error in predictions amongst the Drivers' Championship. A common topic in Formula 1 is: 
+
+`"is the Driver's success down to the driver, or the car?"`
+
+With such certainty in the predictions of the **Constructors' Championship**, it appears that the teams that are the best will always win. However, McLaren were able to pull something unexpected out of the bag in claiming a 3rd place finish, so perhaps there is more excitement amongst constructors than a ten-team championship could possibly show on paper.
+
+On the subject the **Drivers' Championship**, There is a lot of unpredictability in terms of positions. Although the Pearson & Spearman Rank Correlations are very high, as is R<sup>2</sup> Score, there is a reasonable amount of error in the predicted standings. This shows that, at the top level, the better the car, generally the better the position in the Constructors' Championship. However, in the Drivers' Championship, whilst the top spots might be off-limits to those in mid- and lower-tier technology, there is still a lot to challenge for within a drivers' tier, and driver prowess counts for just as much as the technology they're provided with when trying to extract the best out of the constructors' cars.
+
+___
+___
+## 7. Future Recommendations
+
+Moving forwards, there are a few things in particular I’d like to focus on to test for improvement in the model:
+
+* Look into availability of more granular hourly weather data to combine with the observed weather data.
+    * May not be possible to access timely, location specific data but worth investing time into.
+* NLP containing some potentially redundant text.
+    * Create more granular data from the scraped weather information - separate air temperature, track temperature, wind speed and general information from the raw scrape.
+    * Test use of different stopwords over the more granular data.
+* Expand the training data to incorporate previous years examine how this would affect predictions.
+* Further expand the range of models tested and tuned, e.g. XGBoost.
+* Test more finite variations in model parameters to incrementally improve scores further.
+* Employ cloud computing to offload some of the computation time to optimise model performance.
+* Look at creating a web app to predict for different seasons using the current data.

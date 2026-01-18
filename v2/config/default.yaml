@@ -1,0 +1,38 @@
+# F1 Predictor Default Configuration
+
+app:
+  name: "F1 Predictor"
+  debug: false
+  log_level: "INFO"
+
+ergast:
+  base_url: "https://ergast.com/api/f1"
+  rate_limit: 0.25  # seconds between requests
+  timeout: 30
+  retries: 3
+
+scraping:
+  wikipedia_enabled: true
+  f1fansite_enabled: true
+  user_agent: "F1Predictor/2.0"
+
+model:
+  # XGBoost tuned hyperparameters (from 96,040 combinations tested)
+  xgb_gamma: 0.1
+  xgb_learning_rate: 0.2
+  xgb_max_depth: 6
+  xgb_n_estimators: 150
+  xgb_reg_lambda: 0.2
+  xgb_subsample: 1.0
+
+  # Training configuration
+  test_season: 2020
+  train_seasons_start: 2014
+  random_state: 42
+
+storage:
+  backend: "sqlite"  # sqlite, csv, or parquet
+  data_dir: "data"
+  models_dir: "data/models"
+  cache_enabled: true
+  cache_ttl: 86400  # 24 hours
